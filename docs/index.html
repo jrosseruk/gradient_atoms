@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient Atoms: Unsupervised Discovery and Steering of Model Behaviors</title>
+    <meta name="description" content="Gradient Atoms: Unsupervised Discovery, Attribution and Steering of Model Behaviors via Sparse Decomposition of Training Gradients">
+    <meta name="keywords" content="gradient atoms, interpretability, steering vectors, sparse dictionary learning, training data attribution">
+    <link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function() {
+            try {
+                var saved = localStorage.getItem('theme');
+                var theme = saved === 'dark' || saved === 'light' ? saved : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+            } catch (e) {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        })();
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+        window.MathJax = {
+            tex: { ams: { multlineWidth: '85%' }, tags: 'ams' },
+            chtml: { scale: 1.0, displayAlign: 'center' },
+            output: { font: 'mathjax-modern', displayOverflow: 'overflow' }
+        };
+    </script>
+</head>
+<body class="bg-global-bg text-global-text antialiased">
+    <!-- Scroll progress bar -->
+    <div class="scroll-progress" id="scroll-progress"></div>
+
+    <!-- Floating particle canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Organic background blobs -->
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+
+    <!-- Theme Toggle Button -->
+    <button id="theme-toggle" class="theme-toggle-btn" aria-label="Switch to dark theme">
+        <svg class="sun-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+        </svg>
+        <svg class="moon-icon" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+        </svg>
+    </button>
+
+    <!-- Main Content -->
+    <main class="mx-auto max-w-3xl px-4 sm:px-8">
+        <!-- Hero Section -->
+        <section id="hero" class="mb-16 text-center">
+            <!-- Spinning atom diagram -->
+            <div class="atom-diagram">
+                <div class="nucleus"></div>
+                <div class="orbit orbit-1"><div class="electron electron-1"></div></div>
+                <div class="orbit orbit-2"><div class="electron electron-2"></div></div>
+                <div class="orbit orbit-3"><div class="electron electron-3"></div></div>
+            </div>
+
+            <h1 class="title mb-4">Gradient Atoms</h1>
+            <p class="hero-subtitle"><strong>Unsupervised Discovery, Attribution and Steering of Model Behaviors via Sparse Decomposition of Training Gradients</strong></p>
+
+            <div class="authors mb-4">
+                <ul class="list-inline">
+                    <li><a href="https://jrosser.co.uk">J Rosser</a></li>
+                </ul>
+            </div>
+
+            <div class="affiliations mb-4">
+                <ul class="list-inline">
+                    <li><a href="https://www.ox.ac.uk/"><img src="assets/oxford_logo.png" height="48px" alt="Oxford"></a></li>
+                    <li><a href="https://foersterlab.com/"><img src="assets/flair_logo.png" height="48px" alt="FLAIR"></a></li>
+                </ul>
+            </div>
+
+            <div class="action-buttons">
+                <ul class="nav nav-pills nav-justified">
+                    <li><a href="assets/Gradient_Atoms.pdf"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg><h4>Paper</h4></a></li>
+                    <li><a href="https://github.com/jrosseruk/gradient_atoms"><span class="icon icon-github" aria-hidden="true"></span><h4>Code</h4></a></li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- TLDR Section -->
+        <section id="tldr" class="mb-16">
+            <div class="prose">
+                <h2>TL;DR</h2>
+                <p>We decompose per-document training gradients into sparse components ("atoms") and find that the highest-coherence ones correspond to recognisable task-type behaviors like arithmetic, refusal, and yes/no classification. These atoms also work as steering vectors: applying the bulleted-lists atom takes bullet usage from 33% to 94%, and removing the refusal atom suppresses systematic refusal from 50% to 0%. No behavioral labels needed.</p>
+            </div>
+        </section>
+
+        <!-- Divider -->
+        <div class="section-divider"><div class="divider-dot"></div><div class="divider-dot"></div><div class="divider-dot"></div></div>
+
+        <!-- Scatter Figure -->
+        <section id="scatter" class="mb-16">
+            <div class="prose">
+                <figure>
+                    <img src="assets/atoms_scatter.png" alt="Scatter plot of 500 gradient atoms, colored by coherence. High-coherence atoms like Trivia Q&A, Grammar editing, and Yes/No classification are labeled.">
+                    <figcaption>500 atoms from sparse dictionary learning on 5,000 training gradients. Dot size and color encode coherence. 5 atoms exceed 0.5 coherence; 43 exceed 0.1.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <!-- Motivation -->
+        <section id="motivation" class="mb-16">
+            <div class="prose">
+                <h2>Motivation</h2>
+                <p>Most training data attribution (TDA) work asks: which training documents are responsible for this model behavior? You pick a behavior you care about, say the model refusing a question, and use influence functions or probes to score individual documents by how much they contributed. This is useful, but I think there's a complementary question worth asking.</p>
+                <p>Fine-tuning doesn't learn from individual documents in isolation. When a model learns to do arithmetic, that isn't because of any single arithmetic example. It's because hundreds of arithmetic examples all push the model's weights in roughly the same direction. The thing learned is a shared update direction, not a property of any individual document. So alongside "which document caused this behavior?", we can ask: <em>what are the common update directions that clusters of documents jointly induce?</em></p>
+                <p>That's the question Gradient Atoms tries to answer. The core idea is simple: documents that teach the model the same thing push its weights in the same direction. If we decompose the space of training gradients into sparse components, the highest-quality components should each isolate a recognisable behavior.</p>
+            </div>
+        </section>
+
+        <div class="section-divider"><div class="divider-dot"></div><div class="divider-dot"></div><div class="divider-dot"></div></div>
+
+        <!-- Method -->
+        <section id="method" class="mb-16">
+            <div class="prose">
+                <h2>Method</h2>
+                <p>The method works with any fine-tuned model where you can compute per-document gradients. It doesn't depend on the architecture, the fine-tuning strategy, or the dataset. There are five steps.</p>
+                <p><strong>1. Compute per-document gradients.</strong> For each training example, take the gradient of the loss with respect to all trainable parameters. This gives you a vector that represents the direction the model's weights would move to get better at that document.</p>
+                <p><strong>2. Project and precondition.</strong> Raw gradient space is anisotropic — some directions have high curvature and would dominate any decomposition. We use EKFAC (<a href="https://arxiv.org/abs/2308.03296">Grosse et al., 2023</a>) to project gradients into an eigenspace and rescale so that every direction has roughly equal footing. This gives a large dimensionality reduction while preserving the directions most relevant to learning.</p>
+                <p><strong>3. Sparse dictionary learning.</strong> We normalize gradients to unit vectors (so we're looking at direction, not magnitude) and run sparse dictionary learning to decompose them into K atoms. The sparsity penalty encourages each atom to capture a single pattern rather than blending unrelated things together.</p>
+                <p><strong>4. Score coherence.</strong> For each atom, we check whether its top-activating documents actually have similar gradients in the original unprojected space. High coherence suggests the atom has found a shared computational motif rather than a projection artifact.</p>
+                <p><strong>5. Unproject to steering vectors.</strong> Any atom can be mapped back to a full parameter-space vector and applied as a weight perturbation. This is the same mechanism as curvature-aware model editing, except the direction was discovered unsupervised rather than hand-crafted.</p>
+            </div>
+        </section>
+
+        <!-- Experimental Setup -->
+        <section id="setup" class="mb-16">
+            <div class="prose">
+                <h2>Experimental Setup</h2>
+                <p>We applied this to Gemma-3 4B IT fine-tuned via LoRA (rank 8, on q_proj and v_proj across 34 layers), giving 2.2M trainable parameters across 136 LoRA modules. The training data is 5,000 instruction-response pairs from a general-purpose SFT mixture covering arithmetic, grammar correction, classification, code generation, QA, creative writing, and other tasks.</p>
+                <p>We extracted per-document gradients for all 5,000 examples, projected via EKFAC into 6,800 dimensions (50 eigencomponents per module, a 328x reduction), and ran dictionary learning with K=500 atoms and sparsity penalty \(\alpha=0.1\). Coherence was computed over the top 20 activating documents per atom using the raw 2.2M-dimensional gradients.</p>
+                <p>The whole pipeline ran in about 25 minutes. Gradient extraction took about 170 seconds on 8 A100s and the rest was CPU-only.</p>
+            </div>
+        </section>
+
+        <div class="section-divider"><div class="divider-dot"></div><div class="divider-dot"></div><div class="divider-dot"></div></div>
+
+        <!-- What the atoms find -->
+        <section id="results" class="mb-16">
+            <div class="prose">
+                <h2>What the Atoms Find</h2>
+                <p>Out of 500 atoms, 5 had coherence above 0.5, 43 had coherence above 0.1, and the remaining 457 were below 0.1 (noise or overly broad mixtures). So most atoms are not interpretable — the method surfaces candidate behaviors, not a clean catalogue. But the ones that do have high coherence are interesting.</p>
+
+                <table>
+                    <thead>
+                        <tr><th>Rank</th><th>Coherence</th><th>Description</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1</td><td>0.725</td><td>Short factual Q&A — trivia with one-word answers</td></tr>
+                        <tr><td>2</td><td>0.672</td><td>Grammar and sentence editing</td></tr>
+                        <tr><td>3</td><td>0.647</td><td>Yes/No/True/False binary classification</td></tr>
+                        <tr><td>4</td><td>0.643</td><td>Simple arithmetic</td></tr>
+                        <tr><td>5</td><td>0.614</td><td>Multi-category classification and labeling</td></tr>
+                        <tr><td>6</td><td>0.499</td><td>Sentence transformation (voice, tense, translation)</td></tr>
+                        <tr><td>7</td><td>0.463</td><td>Sentence restructuring</td></tr>
+                        <tr><td>8</td><td>0.395</td><td>Multi-step arithmetic and unit conversions</td></tr>
+                        <tr><td>9</td><td>0.298</td><td>Mixed technical (code + translations)</td></tr>
+                        <tr><td>10</td><td>0.262</td><td>"Name an example of X" — entity retrieval</td></tr>
+                    </tbody>
+                </table>
+
+                <p>A few things jump out. The atoms cluster training data by <em>how the model responds</em> (arithmetic, classification, editing, code) rather than <em>what it responds about</em> (science, history, etc.). This is consistent with <a href="https://arxiv.org/abs/2411.12580">Ruis et al. (2024)</a>, who find that procedural knowledge is a primary driver of what models extract from training data. It makes sense — task format determines which weights are involved in producing the output, and gradients reflect weight usage.</p>
+                <p>Grammar correction shows up three times at decreasing coherence, and code generation five times. The dictionary is finding sub-clusters that may reflect different complexity levels or programming languages.</p>
+                <p>Bulleted lists and numbered lists get their own separate atoms with similar coherence scores, which suggests the model uses distinct weight pathways for "- item" vs "1. item" formatting.</p>
+                <p>Two atoms capture the model's tendency to reply "Please provide the input" when task instructions lack content. Nobody labeled these as refusal examples. The method surfaced them on its own, and as we'll see, they're separable enough that you can suppress the behavior with weight perturbations.</p>
+            </div>
+        </section>
+
+        <!-- Steering -->
+        <section id="steering" class="mb-16">
+            <div class="prose">
+                <h2>Do Atoms Actually Steer Behavior?</h2>
+                <p>Finding interpretable clusters is nice but the critical question is whether these atoms correspond to actual computational structure. Do they produce predictable behavioral changes when applied as perturbations, or are they just statistical patterns that happen to look clean?</p>
+                <p>We tested this by unprojecting atoms back to parameter space and adding or subtracting scaled versions from the model weights. We swept alpha from 0.5 to 10.0 in both directions and evaluated on 100 test questions per behavior using regex-based detectors.</p>
+
+                <figure>
+                    <img src="assets/behavioral_steering.png" alt="Bar charts showing behavioral steering results across five atoms. Each subplot shows the effect of scaling the atom in both directions across different alpha values.">
+                    <figcaption>Behavioral atom steering: alpha sweep in both directions for five discovered atoms. Red = toward, Blue = away. Dashed line = unsteered baseline.</figcaption>
+                </figure>
+
+                <table>
+                    <thead>
+                        <tr><th>Atom</th><th>Behavior</th><th>Baseline</th><th>Best increase</th><th>Best decrease</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>#469</td><td>Bulleted lists</td><td>33%</td><td>94% (+61pp)</td><td>0% (-33pp)</td></tr>
+                        <tr><td>#161</td><td>Systematic refusal</td><td>50%</td><td>55% (+5pp)</td><td>0% (-50pp)</td></tr>
+                        <tr><td>#299</td><td>Numbered lists</td><td>58%</td><td>59% (+1pp)</td><td>8% (-50pp)</td></tr>
+                        <tr><td>#415</td><td>Yes/No classification</td><td>39%</td><td>51% (+12pp)</td><td>0% (-39pp)</td></tr>
+                        <tr><td>#64</td><td>Code generation</td><td>42%</td><td>58% (+16pp)</td><td>28% (-14pp)</td></tr>
+                    </tbody>
+                </table>
+
+                <p>All five atoms steer behavior in at least one direction and four produce large effects. Bulleted lists go from a third to nearly all responses. Refusal is completely suppressible. Code generation shifts both ways.</p>
+                <p>Suppression seems consistently easier than amplification — all five atoms can suppress their target to near zero, but only two (bullets, code) achieve large increases. One interpretation is that suppressing a behavior means disrupting one pathway, while amplifying requires strengthening that pathway while also suppressing all the competing alternatives.</p>
+                <p>Coherence score doesn't predict steerability. The bulleted-list atom has coherence of only 0.103 but produces the largest steering effect (+61pp), while the yes/no atom has coherence 0.647 but gives only +12pp. Coherence measures how stereotyped the computation is; steerability also depends on how much the model's default behavior already relies on the target pathway.</p>
+                <p>When you suppress the refusal atom, the model stops asking for clarification on ambiguous inputs and just responds "Okay." Whether that's good or bad depends on the application, but you can find and control this behavior without ever having labeled refusal examples.</p>
+            </div>
+        </section>
+
+        <div class="section-divider"><div class="divider-dot"></div><div class="divider-dot"></div><div class="divider-dot"></div></div>
+
+        <!-- Why this matters -->
+        <section id="discussion" class="mb-16">
+            <div class="prose">
+                <h2>Why This Matters</h2>
+                <p>Most interpretability and steering work starts from a known concept — "make the model more truthful" or "find the refusal direction." This requires someone to enumerate the behaviors they care about in advance. Gradient atoms work the other way around: you discover what candidate behaviors exist and then decide which ones matter. For fine-tuning specifically, this is a way to audit what a dataset actually teaches, including behaviors you didn't intend.</p>
+                <p>Coming back to the TDA point: if you want to understand what fine-tuning does to a model, looking at individual documents may not be the most natural lens. The thing learned is a shared direction that many documents contribute to. Gradient atoms give you those directions. It's the difference between asking "which pixel caused this edge?" and "what edges are in the image?"</p>
+                <p>The same decomposition that tells you what the model learned also gives you vectors to change it. Discovery and steering are usually separate research efforts with separate methods. Here they fall out of the same object, though not all discovered atoms produce strong steering effects and the relationship between coherence and steerability is not straightforward.</p>
+            </div>
+        </section>
+
+        <!-- Limitations -->
+        <section id="limitations" class="mb-16">
+            <div class="prose">
+                <h2>Limitations</h2>
+                <ul>
+                    <li>Most atoms are not interpretable. Only 43 of 500 have coherence above 0.1, and only 5 above 0.5.</li>
+                    <li>Because the training data is instruction-following pairs with distinct formats, atoms recover task types rather than fine-grained semantic preferences.</li>
+                    <li>Behavioral metrics are regex-based surface detectors — we're measuring whether the response contains a code fence, not whether the generated code is any good.</li>
+                    <li>We've tested on one model (Gemma-3 4B), one dataset (5,000 instruction pairs), and one dictionary size (500 atoms).</li>
+                    <li>We keep 50 eigencomponents per module, giving 6,800 dimensions out of 2.2M. More dimensions might reveal additional structure.</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="section-divider"><div class="divider-dot"></div><div class="divider-dot"></div><div class="divider-dot"></div></div>
+
+        <!-- Citation Section -->
+        <section id="citation" class="mb-16">
+            <div class="prose">
+                <h3>Citation</h3>
+                <div class="citation-box">
+                    <textarea id="bibtex" class="bibtex-textarea" readonly>
+@inproceedings{gradient-atoms-2026,
+  title     = {Gradient Atoms: Unsupervised Discovery of Model Behaviors
+               via Sparse Decomposition of Training Gradients},
+  year      = {2026},
+  author    = {J Rosser}
+}</textarea>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="mx-auto max-w-3xl px-4 sm:px-8 py-8 text-center text-sm opacity-75">
+        <p>The website template was borrowed from <a href="http://easyacademicwebsite.github.io">Easy Academic Website Template</a> and <a href="http://jonbarron.info/">Jon Barron</a></p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
