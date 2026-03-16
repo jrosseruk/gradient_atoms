@@ -2,8 +2,6 @@
 
 **Unsupervised discovery and steering of model behaviors via sparse decomposition of training gradients.**
 
-[Paper](PAPER.tex) | [Blog post](less_wrong.md)
-
 ## Quick Start
 
 ```bash
