@@ -1,3 +1,46 @@
+# Custom
+*less_wrong.md
+*how_to_ml.md
+*PAPER.tex
+*PAPER.md
+*METHODOLOGY.md
+*.bib
+*output/
+*output_*/
+*venv/
+*.safetensors
+*results/
+*results_*/
+*.claude/
+paper.tex
+*paper.tex
+*bash2/
+*bash/
+venv/
+*.env
+*.csv
+*.json
+*.pkl
+*wandb/
+*checkpoints/
+*logs/
+wandb/
+*figures/
+core
+# Checkpoints and influence outputs
+*checkpoints/
+*influence_results/
+*influence_results_flexible/
+*data/
+*cache/
+*.pth
+*.pt
+*.pth
+*.pt
+*adversarial_results/
+*.out
+llama-2-7b-news-finetune/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
