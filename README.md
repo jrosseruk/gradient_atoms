@@ -1,6 +1,6 @@
 # Gradient Atoms
 
-**Unsupervised discovery and steering of model behaviors via sparse decomposition of training gradients.**
+**Unsupervised discovery and steering of model behaviors via sparse decomposition of training gradients.**-
 
 ## Quick Start
 
